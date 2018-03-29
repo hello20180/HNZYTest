@@ -1,0 +1,142 @@
+package com.hnzy.znInfo.controller;
+
+import java.io.UnsupportedEncodingException;
+import java.util.Date;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.alibaba.fastjson.JSONObject;
+import com.hnzy.util.Pagination;
+import com.hnzy.util.PropertyUtil;
+import com.hnzy.util.StringUtil;
+import com.hnzy.znInfo.pojo.LoginInfo;
+import com.hnzy.znInfo.pojo.MyInfo;
+import com.hnzy.znInfo.service.LoginInfoService;
+
+@Controller
+@RequestMapping("loginCon")
+public class LoginInfoController
+{
+	@Autowired
+	private LoginInfoService loginInfoService ;
+	private List<LoginInfo> loginList;
+	public String msg;
+	
+	@RequestMapping("toLogin")
+	public String toLogin(){
+		return "login";
+	}
+	@RequestMapping("updapwd")
+	public String updapwd(int id,String passnew ){
+		loginInfoService.updapwd(id, passnew);
+		return "login";
+	}
+	@RequestMapping("changepwd")
+	public String changepwd(HttpServletRequest request,int id,LoginInfo loginInfo){
+		loginInfo=loginInfoService.findNamePwd(id);
+		request.setAttribute("changepwd",loginInfo);
+		return "editpwd";
+		
+		
+	}
+	@RequestMapping(value="loginInfo" ,method=RequestMethod.POST)
+	public String login(HttpSession session,HttpServletRequest request,LoginInfo loginInfo){
+		
+		
+		if(StringUtil.isNotEmpty(loginInfo.getName())&&StringUtil.isNotEmpty(loginInfo.getPwd())){
+			loginInfo=loginInfoService.find(loginInfo.getName(),loginInfo.getPwd());
+			if(loginInfo!=null){
+				//判断状态是否启用
+				if(loginInfo.getState()==0){
+					session.setAttribute("admins",loginInfo);
+					session.setAttribute("role",loginInfo.getRole());
+					return "index";
+				}else{
+					msg= PropertyUtil.Accountdisabled;
+				}
+			}else{
+				msg= PropertyUtil.Informationerror;
+			}
+			
+		}else{
+			msg= PropertyUtil.Informationempty;
+		}
+		request.setAttribute("msg",msg);
+		return "login";
+		
+	}
+
+	 @RequestMapping("loginIf")
+	 public ModelAndView findmyInfo(HttpServletRequest request,String pageNum,String limit){
+		 ModelAndView modelAndView=new ModelAndView();
+		 Pagination<LoginInfo> page=loginInfoService.findAll(pageNum, limit);
+		 modelAndView.setViewName("loginInfo");
+		 modelAndView.addObject("page",page);
+		return modelAndView;
+		 
+	 }
+	 @RequestMapping("upState")
+	public String upState(int id,String states){
+		loginInfoService.upState(id, states);
+		return "redirect:loginIf.action";
+		
+	}
+	 @RequestMapping("searchInfo")
+	 @ResponseBody
+	 public JSONObject searchInfo(String pageNum,String limit ,String name) throws UnsupportedEncodingException{
+		 name=new String(name.getBytes("ISO-8859-1"),"utf-8")+"";
+		 JSONObject  jsonObject=new JSONObject();
+		 Pagination<LoginInfo> page=loginInfoService.findAllSea(pageNum, limit, "%"+name+"%");
+		 jsonObject.put("page",page);
+		return jsonObject;
+	 }
+	 
+	 @RequestMapping("Insert")
+	 public String Insert(LoginInfo loginInfo)                                                                                                                              {
+		 loginInfo.setEndTime(new Date());
+		 loginInfo.setStatTime(new Date());
+		 loginInfoService.toInsert(loginInfo);
+		return "loginInfosuccess";
+		 
+	 }
+	 @RequestMapping("toInsert")
+	 public String toInsert(){
+		return "toInsertLogin";
+		 
+	 }
+	 @RequestMapping("toUpdate")
+	 public String toUpdate(HttpServletRequest request,LoginInfo loginInfo,int id){
+		 
+		 loginInfo=loginInfoService.findById(id);
+		 request.setAttribute("Info", loginInfo);
+		return "toUpdateLogin";
+		 
+	 }
+	 @RequestMapping("update")
+	 public String update(LoginInfo loginInfo){
+		 loginInfo.setStatTime(new Date());
+		 loginInfo.setEndTime(new Date());
+		 loginInfoService.update(loginInfo);
+		return "loginInfosuccess";
+		 
+	 }
+	public List<LoginInfo> getLoginList()
+	{
+		return loginList;
+	}
+
+	public void setLoginList(List<LoginInfo> loginList)
+	{
+		this.loginList = loginList;
+	}
+
+}

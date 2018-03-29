@@ -1,0 +1,30 @@
+package com.hnzy.znInfo.dao;
+
+import java.util.List;
+
+import org.apache.ibatis.annotations.Param;
+
+import com.hnzy.util.BaseDao;
+import com.hnzy.znInfo.pojo.LoginInfo;
+import com.hnzy.znInfo.pojo.MyInfo;
+
+public interface LoginInfoDao extends BaseDao<LoginInfo>
+{
+	public LoginInfo find(@Param("name")String name,@Param("pwd")String pwd);
+	public LoginInfo findNamePwd(int id);
+	public void updapwd(@Param("id")int id,@Param("passnew")String passnew);
+	/**
+	 * 分页查询
+	 * @param offset
+	 * @param limit
+	 * @return
+	 */
+	public List<LoginInfo> findAllSea(@Param("offset")int offset ,@Param("limit")int limit,@Param("name")String name);
+	/**
+	 * 得到总数
+	 * @return
+	 */
+	public int getTotalNumSea(@Param("name")String name);
+	//更新用户状态
+	public void upState(@Param("id")int id,@Param("state")String state);
+}

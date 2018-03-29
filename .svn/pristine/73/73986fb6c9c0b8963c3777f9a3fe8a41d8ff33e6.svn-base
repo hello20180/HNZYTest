@@ -1,0 +1,21 @@
+package com.hnzy.znInfo.service;
+
+import com.hnzy.util.Pagination;
+import com.hnzy.znInfo.pojo.LoginInfo;
+import com.hnzy.znInfo.pojo.MyInfo;
+
+public interface MyInfoService
+{
+	//查询所有并分页
+	 public Pagination<MyInfo> findAll(String pageNum,String limit);
+	 //根据条件搜索并分页
+	 public Pagination<MyInfo>findAllSea(String pageNum,String limit,String name);
+	 //插入
+	 public void Insert(MyInfo myInfo);
+	 //更新
+	 public MyInfo findById(int id);
+	 //删除
+	 public void delete(String id);
+	 //更新
+	 public void update(MyInfo myInfo);
+}

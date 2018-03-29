@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:c="http://www.springframework.org/schema/c"
+	xmlns:cache="http://www.springframework.org/schema/cache"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.1.xsd
+		http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache-4.1.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.1.xsd
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.1.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.1.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.1.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.1.xsd">
+    <context:annotation-config />
+    <task:annotation-driven/><!-- 定时器开关 -->
+	<bean id="schedulerFactoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean" />
+	<aop:aspectj-autoproxy />
+	<!-- 扫描service层 -->
+	<context:component-scan base-package="com.hnzy.*.service"></context:component-scan>
+	<!-- 加载数据库配置文件 -->
+	<context:property-placeholder location="classpath:jdbc.properties" />
+	<!-- 配置数据库连接池 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		p:url="${jdbc.url}"
+	    p:username="${jdbc.user}" 
+		p:password="${jdbc.password}"
+		p:driverClassName="${jdbc.driver}" 
+		p:maxActive="30"
+		p:maxIdle="10"
+		p:maxWait="1000" />
+	<!-- 配置mybatis session工厂类，指定数据源，主配置文件，mapper映射文件，实体类所在包信息 -->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean"
+		p:dataSource-ref="dataSource" p:configLocation="classpath:mybatis/config.xml"
+		p:mapperLocations="classpath:mybatis/mapper/**/*.xml"
+		p:typeAliasesPackage="com.hnzy.*.pojo" />
+
+	<!-- 指定dao接口所在位置，该类会根据接口和mapper配置文件自动创建接口的实现类，service层直接使用即可 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer"
+		p:basePackage="com.hnzy.*.dao" />
+
+	<!-- 事物管理 -->
+	<bean id="txManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager"
+		p:dataSource-ref="dataSource" />
+
+	<aop:config>
+		<aop:pointcut expression="execution(* com.hnzy.*.service.**.*(..))"
+			id="serviceMethods" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="serviceMethods" />
+	</aop:config>
+	<tx:advice id="txAdvice" transaction-manager="txManager">
+		<tx:attributes>
+			<tx:method name="save" propagation="REQUIRED" />
+			<tx:method name="update*" propagation="REQUIRED" />
+			<tx:method name="delete*" propagation="REQUIRED" />
+			<tx:method name="get*" read-only="true" />
+			<tx:method name="find*" read-only="true" />
+		</tx:attributes>
+	</tx:advice>
+
+<!-- spring定时器 -->
+<bean id="myTest" class="com.hnzy.hot.tjfx.controller.TimeSix"></bean>
+<!-- 每隔五秒执行一次 -->
+<task:scheduled-tasks>
+<task:scheduled ref="myTest"  method="show" cron="0 */10  8-23 * * ?"/>
+<task:scheduled ref="myTest" method="print" cron="*/10 * * * * ?" />
+</task:scheduled-tasks>
+
+</beans>

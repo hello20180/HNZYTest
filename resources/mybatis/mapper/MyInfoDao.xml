@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "http://mybatis.org/dtd/mybatis-3-mapper.dtd" "mybatis-3-mapper.dtd" >
+<mapper namespace="com.hnzy.znInfo.dao.MyInfoDao">
+<resultMap type="MyInfo" id="myInfo">
+<id property="id" column="Id"/>
+<result property="name" column="Name"/>
+<result property="address" column="Address"/>
+<result property="age" column="Age"/>
+<result property="school" column="School"/>
+</resultMap>
+<!-- 查询所有并分页 -->
+<select id="findAll" resultMap="myInfo" parameterType="MyInfo">
+select * from myinfo LIMIT #{offset},#{limit}
+</select>
+<!-- 查询所有的总数 -->
+<select id="getTotalNum" resultType="int">
+select count(id) from myinfo
+</select>
+<!-- 根据搜索并分页 -->
+<select id="findAllSea" resultMap="myInfo" parameterType="MyInfo">
+ select * from myinfo 
+ <where>
+ <if test="name!='%%'">
+ 	and name Like #{name}
+ </if>
+ </where> 
+ limit #{offset},#{limit}
+</select>
+
+
+<!-- 搜索并查询总数 -->
+<select id="getTotalNumSea" resultType="int"  parameterType="MyInfo">
+select count(id) from myinfo
+<where>
+<if test="name!='%%'">
+ 	and name Like #{name}
+</if>
+</where>
+</select>
+<insert id="Insert" parameterType="MyInfo">
+insert into myinfo (Name,Address,Age,School) values(#{name},#{address},#{age},#{school})
+
+</insert>
+<select id="findById" resultType="myInfo"  parameterType="MyInfo">
+select * from myinfo where Id=#{id}
+</select>
+<delete id="delete" parameterType="MyInfo">
+delete from myinfo where id=#{id}
+</delete>
+<update id="update" parameterType="MyInfo">
+update myinfo set Name=#{name},Address=#{address},Age=#{age},School=#{school} where id=#{id}
+</update>
+<select id="MyInfodoExportExcel" resultMap="myInfo" parameterType="MyInfo" >
+select * from myinfo 
+ <where>
+ <if test="name!='%%'">
+ 	and name Like #{name}
+ </if>
+ </where> 
+</select>
+
+</mapper>
